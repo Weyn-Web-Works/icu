@@ -124,7 +124,7 @@ MaybeStackVector<Measure> ComplexUnitsConverter::convert(double quantity,
         if (i < n - 1) {
             // If quantity is at the limits of double's precision from an
             // integer value, we take that integer value.
-            int64_t flooredQuantity = floor(quantity * (1 + DBL_EPSILON));
+            int64_t flooredQuantity = static_cast<int64_t>(floor(quantity * (1 + DBL_EPSILON)));
             intValues[i] = flooredQuantity;
 
             // Keep the residual of the quantity.
@@ -158,21 +158,21 @@ MaybeStackVector<Measure> ComplexUnitsConverter::convert(double quantity,
             }
 
             // Check if there's a carry, and bubble it back up the resulting intValues.
-            int64_t carry = floor(unitConverters_[i]->convertInverse(quantity) * (1 + DBL_EPSILON));
+            double carry = floor(unitConverters_[i]->convertInverse(quantity) * (1 + DBL_EPSILON));
             if (carry <= 0) {
                 break;
             }
             quantity -= unitConverters_[i]->convert(carry);
-            intValues[i - 1] += carry;
+            intValues[i - 1] += static_cast<int64_t>(carry);
 
             // We don't use the first converter: that one is for the input unit
             for (int32_t j = i - 1; j > 0; j--) {
-                carry = floor(unitConverters_[j]->convertInverse(intValues[j]) * (1 + DBL_EPSILON));
+                carry = floor(unitConverters_[j]->convertInverse(static_cast<double>(intValues[j])) * (1 + DBL_EPSILON));
                 if (carry <= 0) {
                     break;
                 }
-                intValues[j] -= round(unitConverters_[j]->convert(carry));
-                intValues[j - 1] += carry;
+                intValues[j] -= static_cast<int64_t>(round(unitConverters_[j]->convert(carry)));
+                intValues[j - 1] += static_cast<int64_t>(carry);
             }
         }
     }
